@@ -5,18 +5,18 @@ const requireAuth = require('../middleware/requireAuth');
 const router = express.Router();
 
 // This line protects ALL routes below it
-router.use(requireAuth);
+// router.use(requireAuth);
 
 // Get all tasks
-router.get('/', getTasks);
+router.get('/', requireAuth, getTasks);
 
 // Add new task
-router.post('/', addTask);
+router.post('/', requireAuth, addTask);
 
 // Update task time/status
-router.patch('/:id', updateTask);
+router.patch('/:id', requireAuth, updateTask);
 
 // Delete task
-router.delete('/:id', deleteTask);
+router.delete('/:id', requireAuth, deleteTask);
 
 module.exports = router;

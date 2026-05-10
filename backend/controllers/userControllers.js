@@ -44,7 +44,7 @@ const signupUser = async (req, res) => {
       if (user) {
         // console.log(user._id);
         const token = generateToken(user._id);
-        res.status(201).json({email, token});
+        res.status(201).json({email: user.email, token});
       }
       else {
         return res.status(400).json({error: 'Invalid user data'});
@@ -62,17 +62,23 @@ const signupUser = async (req, res) => {
 // @access  Public
 const loginUser = async (req, res) => {
   const {email, password} = req.body;
+  
   try {
     // Check for user email
     const user = await User.findOne({email});
     
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const token = generateToken(user._id);
-      res.status(200).json({email, token});
+    if (!user) {
+      return res.status(400).json({ error: "Invalid credentials" });
     }
-    else {
-      return res.status(400).json({error: 'Invalid credentials'});
+    const match = await bcrypt.compare(password, user.password);
+    
+    if (!match) {
+      return res.status(400).json({ error: "Invalid credentials" });
     }
+    const token = generateToken(user._id);
+    
+    res.status(200).json({ email: user.email, token });
+    
   } catch (error) {
     res.status(400).json({error: error.message});
   }

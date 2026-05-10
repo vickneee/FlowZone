@@ -3,11 +3,12 @@ const unknownEndpoint = (request, response) => {
 };
 
 const errorHandler = (error, request, response, _next) => {
-  console.error(error.message);
-
-  response.status(500);
+  console.error("ERROR:", error);
+  
+  response.status(response.statusCode === 200 ? 500 : response.statusCode);
+  
   response.json({
-    message: error.message,
+    error: error.message || "Server Error",
   });
 };
 
