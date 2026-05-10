@@ -24,6 +24,12 @@ Flow Zone is a Pomodoro timer application built using React. It helps users mana
 - Mongoose: An ODM (Object Data Modeling) library for MongoDB and Node.js.
 - JWT (JSON Web Tokens): For user authentication and authorization.
 
+## Testing & Dev Tools
+
+- Jest – JavaScript testing framework
+- Supertest – API testing for Express endpoints
+- GitHub Actions – CI/CD automation for running tests and deployments
+
 ## Prerequisites
 
 - Node.js
@@ -70,36 +76,41 @@ npm install
 cd frontend
 npm run dev
 ```
-Open http://localhost:5173 or http://localhost:3000 in your browser to access the application.
+Open http://localhost:5173 in your browser to access the application.
 
 ## Project structure:
 
 ```
 FlowZone/
-│
 ├── backend/
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── utils/
-│   ├── .env
-│   ├── app.js
-│   ├── index.js
-│   └── package.json
+│   ├── config/            # Database and app configuration
+│   ├── controllers/       # Request handlers (business logic)
+│   ├── middleware/        # Auth, error handling, etc.
+│   ├── models/            # Mongoose schemas
+│   ├── routes/            # API routes
+│   ├── utils/             # Helper functions (JWT, config, etc.)
+│   ├── __tests__/         # Backend tests (Jest + Supertest)
+│   ├── app.js             # Express app setup
+│   ├── index.js           # Server entry point
+│   ├── jest.setup.js      # Test setup (Mongo memory DB, etc.)
+│   ├── package.json
 │
 ├── frontend/
-│   ├── public/
 │   ├── src/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── lib/
-│   │   ├── utils/
-│   │   ├── App.tsx
-│   │   ├── index.css
-│   │   └── main.tsx
-│   └── package.json
+│   │   ├── components/    # Reusable UI components
+│   │   ├── hooks/         # Custom React hooks
+│   │   ├── lib/           # API calls / utilities
+│   │   ├── utils/         # Helper functions
+│   │   ├── App.tsx        # Main React component
+│   │   └── main.tsx       # Entry point
+│   ├── public/            # Static assets
+│   ├── dist/              # Production build (GitHub Pages)
+│   ├── package.json
+│
+├── .github/
+│   └── workflows/         # GitHub Actions CI/CD pipelines
+│       ├── backend-ci.yml
+│       └── frontend-deploy.yml
 │
 ├── README.md
 └── .gitignore
