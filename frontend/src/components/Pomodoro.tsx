@@ -24,7 +24,7 @@ function Pomodoro({user}: Props) {
     return (
         <main className="min-h-screen flex flex-col items-center bg-background text-foreground font-sans px-4 py-10">
             <Toaster/>
-            <h1 style={{fontFamily: "Permanent Marker", fontWeight: 400}} className="text-6xl font-semibold mb-6">
+            <h1 style={{fontFamily: "Permanent Marker", fontWeight: 400}} className="text-6xl font-semibold my-4">
                 <span className="text-primary">Flow Zone</span>
             </h1>
             {/* Mode tabs */}
