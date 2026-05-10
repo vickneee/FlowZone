@@ -8,10 +8,6 @@ on:
 permissions:
   contents: write
 
-# This forces the runner to use Node 24 for all actions
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -25,6 +21,7 @@ jobs:
         with:
           node-version: 22
 
+      # ---------------- FRONTEND BUILD ----------------
       - name: Install frontend dependencies
         run: npm install
         working-directory: ./frontend
@@ -33,6 +30,7 @@ jobs:
         run: npm run build
         working-directory: ./frontend
 
+      # ---------------- DEPLOY ----------------
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
