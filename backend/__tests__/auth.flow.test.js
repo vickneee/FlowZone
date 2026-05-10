@@ -3,16 +3,11 @@ const app = require("../app");
 
 describe("Auth Flow (Signup → Login → Protected Route)", () => {
   
-  let token; // Shared variable
-  
   it("should signup and login successfully", async () => {
     
     const user = {
-      
       email: `flow${Date.now()}@example.com`,
-      
       password: "123456"
-      
     };
     
     await request(app)
