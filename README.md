@@ -72,20 +72,34 @@ npm run dev
 ```
 Open http://localhost:5173 or http://localhost:3000 in your browser to access the application.
 
-Project structure:
+## Project structure:
 
-```flow-zone/
+```
+FlowZone/
 ├── backend/
-│   ├── models/
-│   ├── routes/
+│   ├── config/
 │   ├── controllers/
 │   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── utils/
 │   ├── .env
-│   ├── server.js
+│   ├── app.js
+│   ├── index.js
+│   └── package.json
+│
 ├── frontend/
-│   ├── src/
 │   ├── public/
-│   ├── package.json
+│   ├── src/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── lib/
+│   │   ├── utils/
+│   │   ├── App.tsx
+│   │   ├── index.css
+│   │   └── main.tsx
+│   └── package.json
+│
 ├── README.md
-├──.gitignore
+└── .gitignore
 ```
