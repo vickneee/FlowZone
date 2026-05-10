@@ -14,20 +14,18 @@ const generateToken = (_id) => {
 // @access  Public
 const signupUser = async (req, res) => {
     const {
-      name,
       email,
       password,
     } = req.body;
     try {
       if (
-        !name ||
         !email ||
         !password
       ) {
         return res.status(400).json({error: 'Please add all fields'});
       }
       // Check if user exists
-      const userExists = await User.findOne({email});
+      const userExists = await User.findOne({ email });
       
       if (userExists) {
         return res.status(400).json({error: 'User already exists'});
@@ -39,7 +37,6 @@ const signupUser = async (req, res) => {
       
       // Create user
       const user = await User.create({
-        name,
         email,
         password: hashedPassword,
       });
@@ -61,7 +58,7 @@ const signupUser = async (req, res) => {
 ;
 
 // @desc    Authenticate a user
-// @route   POST /api/users/login
+// @route   POST /api/users/signin
 // @access  Public
 const loginUser = async (req, res) => {
   const {email, password} = req.body;
