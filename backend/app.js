@@ -8,7 +8,6 @@ const userRouter = require("./routes/userRouter");
 const taskRouter = require("./routes/taskRouter");
 
 const { unknownEndpoint,errorHandler } = require("./middleware/customMiddleware");
-const connectDB = require("./config/db");
 
 // Middlewares
 app.use(cors())
