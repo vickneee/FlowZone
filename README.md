@@ -76,6 +76,7 @@ Open http://localhost:5173 or http://localhost:3000 in your browser to access th
 
 ```
 FlowZone/
+│
 ├── backend/
 │   ├── config/
 │   ├── controllers/
