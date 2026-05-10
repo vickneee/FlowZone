@@ -30,7 +30,7 @@ const updateTask = async (req, res) => {
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, user_id: req.user._id }, // Ensure the task belongs to the authenticated user
       { completedTime: req.body.completedTime, completed: req.body.completed },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!task) return res.status(404).json({ error: "Task not found" });
     res.status(200).json(task);

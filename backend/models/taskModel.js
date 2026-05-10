@@ -13,14 +13,4 @@ const taskSchema = new Schema(
   { timestamps: true, versionKey: false }
 );
 
-// // Add virtual field id
-// taskSchema.set('toJSON', {
-//   virtuals: true,
-//   transform: (doc, ret) => {
-//     ret.id = ret._id;
-//     delete ret._id; // Clean up the duplicate _id
-//     return ret;
-//   }
-// });
-
 module.exports = mongoose.model("Task", taskSchema);
