@@ -10,7 +10,10 @@ const taskRouter = require("./routes/taskRouter");
 const { unknownEndpoint,errorHandler } = require("./middleware/customMiddleware");
 
 // Middlewares
-app.use(cors())
+app.use(cors({
+  origin: "https://flowzone-dr4.pages.dev",
+  credentials: true
+}))
 app.use(express.json());
 
 app.get("/", (req, res) => {
