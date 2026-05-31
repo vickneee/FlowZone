@@ -10,9 +10,9 @@ const isTest = process.env.NODE_ENV === "test";
 
 if (!isTest) connectDB();
 
-const PORT = config.PORT || 4000;
+const PORT = process.env.PORT || config.PORT || 4000;
 
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   logger.info(`Server running on port ${PORT}`);
 });
 
