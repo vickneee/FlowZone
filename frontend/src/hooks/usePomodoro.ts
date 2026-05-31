@@ -51,26 +51,91 @@ function playBeep() {
 
 type User = { email: string; token: string } | null;
 
+type PersistedPomodoroState = {
+    mode: Mode;
+    remaining: number;
+    running: boolean;
+    completedFocus: number;
+    tasks: Task[];
+    activeTaskId: string | null;
+    taskInput: string;
+};
+
 const API = import.meta.env.VITE_API_URL;
 
+const POMODORO_STORAGE_PREFIX = "flowzone:pomodoro";
+
+function getPomodoroStorageKey(user: User) {
+    return `${POMODORO_STORAGE_PREFIX}:${user?.email ?? "guest"}`;
+}
+
+function readPersistedPomodoroState(storageKey: string): PersistedPomodoroState | null {
+    if (typeof window === "undefined") return null;
+    try {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as Partial<PersistedPomodoroState>;
+        if (!parsed || typeof parsed !== "object") return null;
+        return {
+            mode: parsed.mode === "short" || parsed.mode === "long" ? parsed.mode : "focus",
+            remaining: typeof parsed.remaining === "number" ? parsed.remaining : DURATIONS.focus,
+            running: typeof parsed.running === "boolean" ? parsed.running : false,
+            completedFocus: typeof parsed.completedFocus === "number" ? parsed.completedFocus : 0,
+            tasks: Array.isArray(parsed.tasks) ? parsed.tasks.filter((task): task is Task => {
+                return !!task
+                    && typeof task.id === "string"
+                    && typeof task.name === "string"
+                    && typeof task.done === "boolean"
+                    && typeof task.seconds === "number";
+            }) : [],
+            activeTaskId: typeof parsed.activeTaskId === "string" ? parsed.activeTaskId : null,
+            taskInput: typeof parsed.taskInput === "string" ? parsed.taskInput : "",
+        };
+    } catch {
+        return null;
+    }
+}
+
+function writePersistedPomodoroState(storageKey: string, state: PersistedPomodoroState) {
+    if (typeof window === "undefined") return;
+    try {
+        localStorage.setItem(storageKey, JSON.stringify(state));
+    } catch {
+        // Ignore storage quota / privacy mode failures.
+    }
+}
+
 export function usePomodoro(user: User) {
-    const [mode, setMode] = useState<Mode>("focus");
-    const [remaining, setRemaining] = useState(DURATIONS.focus);
-    const [running, setRunning] = useState(false);
-    const [completedFocus, setCompletedFocus] = useState(0);
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
-    const [taskInput, setTaskInput] = useState("");
+    const storageKey = getPomodoroStorageKey(user);
+    const persistedState = readPersistedPomodoroState(storageKey);
+
+    const [mode, setMode] = useState<Mode>(persistedState?.mode ?? "focus");
+    const [remaining, setRemaining] = useState(persistedState?.remaining ?? DURATIONS.focus);
+    const [running, setRunning] = useState(persistedState?.running ?? false);
+    const [completedFocus, setCompletedFocus] = useState(persistedState?.completedFocus ?? 0);
+    const [tasks, setTasks] = useState<Task[]>(persistedState?.tasks ?? []);
+    const [activeTaskId, setActiveTaskId] = useState<string | null>(persistedState?.activeTaskId ?? null);
+    const [taskInput, setTaskInput] = useState(persistedState?.taskInput ?? "");
 
     const modeRef = useRef(mode);
     const activeRef = useRef(activeTaskId);
     const tasksRef = useRef(tasks);
 
-    // const API = import.meta.env.VITE_API_URL;
-
     useEffect(() => { modeRef.current = mode; }, [mode]);
     useEffect(() => { activeRef.current = activeTaskId; }, [activeTaskId]);
     useEffect(() => { tasksRef.current = tasks; }, [tasks]);
+
+    useEffect(() => {
+        writePersistedPomodoroState(storageKey, {
+            mode,
+            remaining,
+            running,
+            completedFocus,
+            tasks,
+            activeTaskId,
+            taskInput,
+        });
+    }, [storageKey, mode, remaining, running, completedFocus, tasks, activeTaskId, taskInput]);
 
     const switchMode = useCallback((m: Mode, autoStart = false) => {
         setMode(m);
@@ -93,8 +158,6 @@ export function usePomodoro(user: User) {
     useEffect(() => {
         const fetchTasks = async () => {
             if (!user?.token) {
-                setTasks([]);
-                setActiveTaskId(null);
                 return;
             }
             try {

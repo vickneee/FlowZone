@@ -6,7 +6,13 @@ import Sparkles from "@/components/Sparkles.tsx";
 type User = { email: string; token: string };
 
 function App() {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(() => {
+        try {
+            return JSON.parse(localStorage.getItem("user") ?? "null");
+        } catch {
+            return null;
+        }
+    });
 
     return (
         <div className="relative min-h-screen">
@@ -14,7 +20,7 @@ function App() {
             <div className="absolute top-4 right-4">
                 <AuthButton user={user} setUser={setUser}/>
             </div>
-            <Pomodoro user={user}/>
+            <Pomodoro key={user?.email ?? "guest"} user={user}/>
         </div>
     );
 }
