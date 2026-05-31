@@ -1,10 +1,10 @@
 # Flow Zone 
 
-A full-stack Pomodoro timer with per-user task tracking, built on the MERN stack.
+Flow Zone is a full-stack Pomodoro timer application with per-user task tracking, built using the MERN stack (MongoDB, Express.js, React, and Node.js).
 
-UI originally created as an Introduction to Vibe Coding course project, extended with MongoDB and JWT authentication.
+The user interface was originally created as part of an Introduction to Vibe Coding course project and later extended with MongoDB integration and JWT-based authentication.
 
-Flow Zone is a Pomodoro timer application built using React. It helps users manage their time effectively by breaking work into intervals, traditionally 25 minutes in length, separated by short breaks.
+Flow Zone helps users manage their time effectively using the Pomodoro Technique, which breaks work into focused intervals, traditionally 25 minutes long, separated by short breaks. Users can create accounts, manage tasks, track completed work sessions, and monitor their productivity.
 
 ## Features
 - Pomodoro timer with Focus, Short Break, and Long Break modes
