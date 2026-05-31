@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState, useCallback} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {getAuthHeaders} from '@/utils/auth';
 
 type Mode = "focus" | "short" | "long";
@@ -16,6 +16,13 @@ export type Task = {
     seconds: number;
 };
 
+// shape returned from the backend
+type ServerTask = {
+    _id: string;
+    name: string;
+    completed?: boolean;
+    completedTime?: number;
+};
 export function format(sec: number) {
     const m = Math.floor(sec / 60).toString().padStart(2, "0");
     const s = Math.floor(sec % 60).toString().padStart(2, "0");
@@ -24,8 +31,8 @@ export function format(sec: number) {
 
 function playBeep() {
     try {
-        const AC = window.AudioContext || (window as any).webkitAudioContext;
-        const ctx = new AC();
+        const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        const ctx = new (AC as typeof AudioContext)();
         const o = ctx.createOscillator();
         const g = ctx.createGain();
         o.type = "sine";
@@ -37,10 +44,14 @@ function playBeep() {
         o.start();
         g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
         o.stop(ctx.currentTime + 0.65);
-    } catch {}
+    } catch {
+            // Audio API not supported or user blocked it, fail silently
+    }
 }
 
 type User = { email: string; token: string } | null;
+
+const API = import.meta.env.VITE_API_URL;
 
 export function usePomodoro(user: User) {
     const [mode, setMode] = useState<Mode>("focus");
@@ -55,35 +66,61 @@ export function usePomodoro(user: User) {
     const activeRef = useRef(activeTaskId);
     const tasksRef = useRef(tasks);
 
+    // const API = import.meta.env.VITE_API_URL;
+
     useEffect(() => { modeRef.current = mode; }, [mode]);
     useEffect(() => { activeRef.current = activeTaskId; }, [activeTaskId]);
     useEffect(() => { tasksRef.current = tasks; }, [tasks]);
 
-    const fetchTasks = useCallback(async () => {
-        if (!user?.token) {
-            setTasks([]);
-            setActiveTaskId(null);
-            return;
+    const switchMode = useCallback((m: Mode, autoStart = false) => {
+        setMode(m);
+        setRemaining(DURATIONS[m]);
+        if (autoStart) setTimeout(() => setRunning(true), 500);
+    }, []);
+
+    const handleComplete = useCallback(() => {
+        playBeep();
+        setRunning(false);
+        if (modeRef.current === "focus") {
+            const next = completedFocus + 1;
+            setCompletedFocus(next);
+            switchMode(next % 4 === 0 ? "long" : "short", true);
+        } else {
+            switchMode("focus", true);
         }
-        try {
-            const response = await fetch('http://localhost:4000/api/tasks', {
-                headers: getAuthHeaders(),
-            });
-            const data = await response.json();
-            const mappedTasks = data.map((t: any) => ({
-                id: t._id,
-                name: t.name,
-                done: t.completed,
-                seconds: t.completedTime || 0,
-            }));
-            setTasks(mappedTasks);
-            if (mappedTasks.length > 0) setActiveTaskId(mappedTasks[0].id);
-        } catch (error) {
-            console.error("Fetch error:", error);
-        }
+    }, [completedFocus, switchMode]);
+
+    useEffect(() => {
+        const fetchTasks = async () => {
+            if (!user?.token) {
+                setTasks([]);
+                setActiveTaskId(null);
+                return;
+            }
+            try {
+                const endpoint = "/api/tasks";
+
+                const response = await fetch(`${API}/${endpoint}`, {
+                    headers: getAuthHeaders(),
+                });
+
+                const data = await response.json();
+                const mappedTasks: Task[] = (data as ServerTask[]).map((t) => ({
+                    id: t._id,
+                    name: t.name,
+                    done: !!t.completed,
+                    seconds: t.completedTime || 0,
+                }));
+                setTasks(mappedTasks);
+                if (mappedTasks.length > 0) setActiveTaskId(mappedTasks[0].id);
+            } catch (error) {
+                console.error("Fetch error:", error);
+            }
+        };
+
+        fetchTasks();
     }, [user]);
 
-    useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
     useEffect(() => {
         if (!running) return;
@@ -103,7 +140,7 @@ export function usePomodoro(user: User) {
             }
         }, 1000);
         return () => clearInterval(id);
-    }, [running, activeTaskId]);
+    }, [running, handleComplete]);
 
     useEffect(() => {
         const syncWithBackend = async () => {
@@ -115,7 +152,7 @@ export function usePomodoro(user: User) {
             );
             if (!currentTask) return;
             try {
-                await fetch(`http://localhost:4000/api/tasks/${currentActiveId}`, {
+                await fetch(`${API}/api/tasks/${currentActiveId}`, {
                     method: 'PATCH',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({
@@ -132,23 +169,6 @@ export function usePomodoro(user: User) {
         return () => clearInterval(heartbeat);
     }, [running, user]);
 
-    function handleComplete() {
-        playBeep();
-        setRunning(false);
-        if (modeRef.current === "focus") {
-            const next = completedFocus + 1;
-            setCompletedFocus(next);
-            switchMode(next % 4 === 0 ? "long" : "short", true);
-        } else {
-            switchMode("focus", true);
-        }
-    }
-
-    function switchMode(m: Mode, autoStart = false) {
-        setMode(m);
-        setRemaining(DURATIONS[m]);
-        if (autoStart) setTimeout(() => setRunning(true), 500);
-    }
 
     function reset() {
         setRunning(false);
@@ -169,16 +189,16 @@ export function usePomodoro(user: User) {
             return;
         }
         try {
-            const response = await fetch('http://localhost:4000/api/tasks', {
+            const response = await fetch(`${API}/api/tasks`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({name, completedTime: 0, completed: false}),
             });
             const savedTask = await response.json();
             const mappedTask: Task = {
-                id: savedTask._id,
+                id: (savedTask as ServerTask)._id,
                 name: savedTask.name,
-                done: savedTask.completed,
+                done: !!savedTask.completed,
                 seconds: savedTask.completedTime || 0,
             };
             setTasks((ts) => [...ts, mappedTask]);
@@ -194,7 +214,7 @@ export function usePomodoro(user: User) {
         if (activeTaskId === id) setActiveTaskId(null);
         if (!user?.token) return;
         try {
-            const response = await fetch(`http://localhost:4000/api/tasks/${id}`, {
+            const response = await fetch(`${API}/api/tasks/${id}`, {
                 method: 'DELETE',
                 headers: getAuthHeaders(),
             });
@@ -210,7 +230,7 @@ export function usePomodoro(user: User) {
         ));
         if (!user?.token) return;
         try {
-            await fetch(`http://localhost:4000/api/tasks/${id}`, {
+            await fetch(`${API}/api/tasks/${id}`, {
                 method: 'PATCH',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({completed: checked}),
