@@ -98,9 +98,7 @@ export function usePomodoro(user: User) {
                 return;
             }
             try {
-                const endpoint = "/api/tasks";
-
-                const response = await fetch(`${API}/${endpoint}`, {
+                const response = await fetch(`${API}/api/tasks`, {
                     headers: getAuthHeaders(),
                 });
 
