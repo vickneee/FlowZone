@@ -28,6 +28,8 @@ export default function AuthButton({user, setUser}: Props ) {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const API = import.meta.env.VITE_API_URL;
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();  // ← stops page reload
         if (!email.trim() || password.trim().length < 6) return;
@@ -36,7 +38,7 @@ export default function AuthButton({user, setUser}: Props ) {
         try {
             const endpoint = mode === "signin" ? "signin" : "signup";
 
-            const response = await fetch(`http://localhost:4000/api/users/${endpoint}`, {
+            const response = await fetch(`${API}/api/users/${endpoint}`, {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({email, password}),
